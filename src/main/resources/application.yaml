@@ -1,0 +1,70 @@
+app:
+  version: PROJECT_VERSION
+  environment: ${ENV_NAME}
+  description: "Rating Engine Service"
+
+spring:
+  application:
+    name: Rating Engine
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 3
+      connection-timeout: 10000
+      idle-timeout: 300000
+      max-lifetime: 600000
+      leak-detection-threshold: 500000
+      data-source-properties:
+        options: -c tcp_keepalives_idle=30
+  kafka:
+    client-id: rating-engine
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    auto-register-schemas: false
+    schema-registry-url: ${KAFKA_SCHEMA_REGISTRY_URL}
+    security:
+      protocol: 'SASL_SSL'
+    sasl:
+      mechanism: 'SCRAM-SHA-512'
+      jaas-config: >
+        org.apache.kafka.common.security.scram.ScramLoginModule required 
+        username=rating-engine
+        password="${KAFKA_PASSWORD}";
+    consumer:
+      max-poll-records: 1000
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      group-id: rating-engine
+      billing-line-topic: customer_services.billing.billing_line.event
+      auto-offset-reset: latest
+  cache:
+    caffeine:
+      spec: initialCapacity=100,maximumSize=500,expireAfterAccess=120m
+    cache-names: products
+    type: caffeine
+  threads:
+    virtual:
+      enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include:
+          - health
+          - info
+          - metrics
+          - prometheus
+          - liquibase
+  health:
+    diskspace.enabled: true
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  metrics:
+    enable:
+      all: true
+  info:
+    git:
+      mode: full
