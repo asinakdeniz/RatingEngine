@@ -6,10 +6,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import rating.engine.dto.BillingLineDto;
-import rating.engine.persistence.BillingLineEntity;
-import rating.engine.persistence.BillingLineRepository;
-import rating.engine.persistence.ProductEntity;
 import rating.engine.mapper.BillingLineMapper;
+import rating.engine.persistence.*;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -24,6 +22,8 @@ public class BillingLineService {
 
     private final ObjectMapper objectMapper;
     private final BillingLineRepository billingLineRepository;
+    private final BillingLineMultiValueRepository billingLineMultiValueRepository;
+    private final BillingLineNamedParameterRepository billingLineNamedParameterRepository;
     private final BillingLineMapper billingLineMapper;
     private final ProductService productService;
 
@@ -57,7 +57,7 @@ public class BillingLineService {
         }
 
         if (!entities.isEmpty()) {
-            billingLineRepository.saveAll(entities);
+            billingLineNamedParameterRepository.saveAllBatch(entities);
             log.info("Saved batch of {} billing lines ({} failed to parse)", entities.size(), parseErrors);
         } else {
             log.warn("No valid billing lines to save from batch of {}", values.size());
